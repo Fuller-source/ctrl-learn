@@ -1,6 +1,4 @@
-"use client"
-
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { EditorState } from "@codemirror/state"
 import { EditorView, keymap } from "@codemirror/view"
 import { defaultKeymap } from "@codemirror/commands"
@@ -12,7 +10,7 @@ export function useCodeMirror(initialCode: string, onChange: (code: string) => v
   const [editorView, setEditorView] = useState<EditorView | null>(null)
 
   useEffect(() => {
-    if (!editorRef.current) return
+    if (!editorRef.current || editorView) return // Prevent reinitialization
 
     const state = EditorState.create({
       doc: initialCode,
@@ -38,7 +36,7 @@ export function useCodeMirror(initialCode: string, onChange: (code: string) => v
     return () => {
       view.destroy()
     }
-  }, [initialCode, onChange]) // Removed editorRef from dependencies
+  }, []) // Empty dependency array ensures this only runs once
 
   useEffect(() => {
     if (editorView) {
