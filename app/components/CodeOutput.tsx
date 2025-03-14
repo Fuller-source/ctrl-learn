@@ -1,15 +1,17 @@
+import React from 'react';
+
 interface CodeOutputProps {
-  output: string | string[]
+  output: string;
 }
 
-export default function CodeOutput({ output }: CodeOutputProps) {
-  const formattedOutput = Array.isArray(output) ? output.join("\n") : output
-
+const CodeOutput: React.FC<CodeOutputProps> = ({ output }) => {
   return (
     <div className="border rounded p-4 mt-4">
       <h2 className="text-xl font-bold mb-2">Output</h2>
-      <pre className="bg-gray-100 p-2 rounded whitespace-pre-wrap">{formattedOutput}</pre>
+      <pre className="whitespace-pre-wrap">{output}</pre>
     </div>
-  )
-}
+  );
+};
+
+export default CodeOutput;
 

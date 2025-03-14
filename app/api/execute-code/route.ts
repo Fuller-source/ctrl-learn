@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server"
 import { PythonShell } from "python-shell"
+import cors from 'cors'
+import express from 'express'
+
+const app = express()
+
+// Enable CORS for all routes
+app.use(cors())
 
 export async function POST(req: Request) {
   const { code } = await req.json()
@@ -16,6 +23,7 @@ export async function POST(req: Request) {
       })
     })
 
+    console.log("Execution result:", result)
     return NextResponse.json({ output: result })
   } catch (error) {
     console.error("Error executing code:", error)
