@@ -20,6 +20,8 @@ export default function CtrlLearn() {
 
   const handleRunCode = useCallback(async () => {
     try {
+      setOutput("Running code...")
+
       // Execute code
       const executeResponse = await fetch("/api/execute-code", {
         method: "POST",
@@ -56,13 +58,18 @@ export default function CtrlLearn() {
     }
   }, [code])
 
+  // This function will be passed to the CodeEditor to handle direct output updates
+  const handleDirectOutput = useCallback((result: string) => {
+    setOutput(result)
+  }, [])
+
   return (
     <div className="container mx-auto px-4">
       <Header />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <CodeEditor initialCode={code} onCodeChange={handleCodeChange} onRunCode={handleRunCode} />
-          <CodeOutput output={output} />
+          <CodeEditor initialCode={code} onCodeChange={handleCodeChange} onRunCode={handleDirectOutput} />
+          <CodeOutput output={typeof output === "string" ? output : output.join("\n")} />
         </div>
         <div>
           <Feedback feedback={feedback} />
@@ -73,4 +80,5 @@ export default function CtrlLearn() {
     </div>
   )
 }
+
 

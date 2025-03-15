@@ -7,12 +7,11 @@ import CodeOutput from "./CodeOutput"
 interface CodeEditorProps {
   initialCode: string
   onCodeChange: (code: string) => void
-  onRunCode: () => void
+  onRunCode: (output: string) => void
 }
 
 export default function CodeEditor({ initialCode, onCodeChange, onRunCode }: CodeEditorProps) {
   const [localCode, setLocalCode] = useState(initialCode)
-  const [output, setOutput] = useState("")
 
   const handleChange = useCallback(
     (code: string) => {
@@ -26,14 +25,16 @@ export default function CodeEditor({ initialCode, onCodeChange, onRunCode }: Cod
 
   const runCode = async () => {
     try {
-      setOutput("Running code...")
+      onRunCode("Running code...")
+
+      // You can either use the Flask backend directly:
       const response = await fetch("http://127.0.0.1:5000/api/run-code", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ code: localCode }),
-        mode: "cors", // Explicitly set CORS mode
+        mode: "cors",
       })
 
       if (!response.ok) {
@@ -44,16 +45,35 @@ export default function CodeEditor({ initialCode, onCodeChange, onRunCode }: Cod
       console.log("Code execution result:", result)
 
       if (result.error) {
-        setOutput(`Error: ${result.error}`)
+        onRunCode(`Error: ${result.error}`)
       } else {
-        setOutput(result.output || "No output")
+        onRunCode(result.output || "No output")
       }
+
+      /* Or you can use your existing API endpoint:
+      const executeResponse = await fetch("/api/execute-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code: localCode }),
+      });
+      
+      const executeData = await executeResponse.json();
+      if (executeData.output) {
+        onRunCode(executeData.output);
+      } else if (executeData.error) {
+        onRunCode(`Error: ${executeData.error}`);
+      } else {
+        onRunCode("No output or an error occurred.");
+      }
+      */
     } catch (error) {
       console.error("Error running code:", error)
       if (error instanceof Error) {
-        setOutput(`Error running code: ${error.message}`)
+        onRunCode(`Error running code: ${error.message}`)
       } else {
-        setOutput("Error running code")
+        onRunCode("Error running code")
       }
     }
   }
@@ -65,7 +85,6 @@ export default function CodeEditor({ initialCode, onCodeChange, onRunCode }: Cod
       <button onClick={runCode} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
         Run Code
       </button>
-      <CodeOutput output={output} />
     </div>
   )
 }
