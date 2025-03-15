@@ -1,16 +1,17 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import Header from "./components/Header"
 import CodeEditor from "./components/CodeEditor"
 import Feedback from "./components/Feedback"
 import Visualization from "./components/Visualization"
 import AudioFeedback from "./components/AudioFeedback"
 import CodeOutput from "./components/CodeOutput"
+import { debounce } from "./utils/debounce"
 
 export default function CtrlLearn() {
   const [code, setCode] = useState("")
-  const [feedback, setFeedback] = useState("Click 'Run Code' to get feedback on your code.")
+  const [feedback, setFeedback] = useState("Enter some code to get feedback.")
   const [codeInsights, setCodeInsights] = useState([])
   const [visualization, setVisualization] = useState<string>("")
   const [output, setOutput] = useState<string | string[]>("")
@@ -18,7 +19,7 @@ export default function CtrlLearn() {
 
   const analyzeCode = useCallback(async (codeToAnalyze: string) => {
     if (!codeToAnalyze || codeToAnalyze.trim() === "") {
-      setFeedback("Enter some code and click 'Run Code' to get feedback.")
+      setFeedback("Enter some code to get feedback.")
       setCodeInsights([])
       return
     }
@@ -46,10 +47,19 @@ export default function CtrlLearn() {
     }
   }, [])
 
-  const handleCodeChange = useCallback((newCode: string) => {
-    setCode(newCode)
-    // No longer triggering analysis on code change
-  }, [])
+  // Create a debounced version of analyzeCode that only runs after 1 second of inactivity
+  const debouncedAnalyzeCode = useCallback(
+    debounce((code: string) => analyzeCode(code), 1000),
+    [analyzeCode],
+  )
+
+  const handleCodeChange = useCallback(
+    (newCode: string) => {
+      setCode(newCode)
+      debouncedAnalyzeCode(newCode)
+    },
+    [debouncedAnalyzeCode],
+  )
 
   const handleRunCode = useCallback(async () => {
     try {
@@ -72,13 +82,20 @@ export default function CtrlLearn() {
         setOutput("No output or an error occurred.")
       }
 
-      // Only analyze code when Run Code is clicked
+      // Force a fresh analysis when code is run
       analyzeCode(code)
     } catch (error) {
       console.error("Error running code:", error)
       setOutput("An error occurred while running the code.")
     }
   }, [code, analyzeCode])
+
+  // Initial analysis when component mounts
+  useEffect(() => {
+    if (code) {
+      analyzeCode(code)
+    }
+  }, [])
 
   // This function will be passed to the CodeEditor to handle direct output updates
   const handleDirectOutput = useCallback((result: string) => {

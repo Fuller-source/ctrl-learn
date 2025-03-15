@@ -1,33 +1,38 @@
 import { NextResponse } from "next/server"
-import { PythonShell } from "python-shell"
-import cors from 'cors'
-import express from 'express'
-
-const app = express()
-
-// Enable CORS for all routes
-app.use(cors())
 
 export async function POST(req: Request) {
-  const { code } = await req.json()
-
-  if (!code) {
-    return NextResponse.json({ error: "No code provided" }, { status: 400 })
-  }
-
   try {
-    const result = await new Promise<string[]>((resolve, reject) => {
-      PythonShell.runString(code, null, (err, results) => {
-        if (err) reject(err)
-        resolve(results || [])
-      })
+    const { code } = await req.json()
+
+    if (!code) {
+      return NextResponse.json({ error: "No code provided" }, { status: 400 })
+    }
+
+    console.log("Executing code:", code)
+
+    // For now, let's execute the code using the Flask backend
+    const response = await fetch("http://127.0.0.1:5000/api/run-code", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ code }),
     })
 
+    if (!response.ok) {
+      throw new Error(`Flask server responded with status: ${response.status}`)
+    }
+
+    const result = await response.json()
     console.log("Execution result:", result)
-    return NextResponse.json({ output: result })
+
+    return NextResponse.json(result)
   } catch (error) {
     console.error("Error executing code:", error)
-    return NextResponse.json({ error: "Failed to execute code" }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to execute code: " + (error.message || "Unknown error") },
+      { status: 500 },
+    )
   }
 }
 

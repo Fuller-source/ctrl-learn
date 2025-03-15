@@ -20,18 +20,9 @@ export async function POST(req: Request) {
       2. A detailed line-by-line explanation of what the code does
       3. Any potential issues, bugs, or improvements
 
-      Format your response as JSON with the following structure:
-      {
-        "feedback": "Overall assessment here",
-        "codeInsights": [
-          {
-            "line": line_number,
-            "code": "code snippet",
-            "explanation": "explanation of this line",
-            "type": "info|warning|error|tip"
-          }
-        ]
-      }
+      Format your response with language describing what the code does
+      and include any suggestions for improvement. Be specific.
+      If the code is too long, focus on the most important parts and summarize the rest.
 
       Here's the code:
       \`\`\`python
@@ -70,3 +61,6 @@ export async function POST(req: Request) {
     )
   }
 }
+
+
+      
