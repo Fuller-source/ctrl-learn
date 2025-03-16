@@ -22,6 +22,13 @@ export default function Feedback({ feedback, codeInsights = [], isLoading = fals
     setExpandedInsight(expandedInsight === index ? null : index)
   }
 
+  // Format feedback to preserve line breaks
+  const formattedFeedback = feedback.split("\n").map((line, index) => (
+    <p key={index} className={line.trim() === "" ? "my-2" : "my-1"}>
+      {line}
+    </p>
+  ))
+
   return (
     <div className="border rounded p-4 mb-4">
       <h2 className="text-xl font-bold mb-2">Feedback</h2>
@@ -33,7 +40,7 @@ export default function Feedback({ feedback, codeInsights = [], isLoading = fals
         </div>
       ) : (
         <>
-          <div className="mb-4 prose prose-sm max-w-none">{feedback}</div>
+          <div className="mb-4 prose prose-sm max-w-none">{formattedFeedback}</div>
 
           {codeInsights.length > 0 && (
             <div className="mt-4">
