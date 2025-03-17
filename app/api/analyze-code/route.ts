@@ -13,11 +13,6 @@ export async function POST(req: Request) {
       })
     }
 
-    // Use a mock response if OpenAI API is unavailable due to quota issues
-    if (process.env.USE_MOCK_ANALYSIS === "true") {
-      return NextResponse.json(generateMockAnalysis(code))
-    }
-
     const prompt = `
     Analyze the following Python code and provide:
     1. A short summary of what the code does (2-3 sentences).
@@ -42,7 +37,7 @@ export async function POST(req: Request) {
       })
 
       // Format the response to ensure numbered points are on separate lines
-      const formattedText = formatNumberedPoints(text)
+      const formattedText = text.replace(/(\d+)\.\s+/g, "\n\n$1. ").trim()
 
       return NextResponse.json({
         feedback: formattedText,
@@ -50,8 +45,13 @@ export async function POST(req: Request) {
       })
     } catch (apiError) {
       console.error("Error calling OpenAI API:", apiError)
-      // If API call fails due to quota, use mock analysis
-      return NextResponse.json(generateMockAnalysis(code))
+      return NextResponse.json(
+        {
+          feedback: "Unable to analyze code due to an API error. Please try again later.",
+          codeInsights: [],
+        },
+        { status: 500 },
+      )
     }
   } catch (error) {
     console.error("Error analyzing code:", error)
@@ -64,61 +64,5 @@ export async function POST(req: Request) {
     )
   }
 }
-
-// Function to format numbered points with proper line breaks
-function formatNumberedPoints(text) {
-  // Replace numbered points with proper formatting
-  // This regex looks for numbers followed by a period and space
-  return text.replace(/(\d+)\.\s+/g, "\n\n$1. ").trim()
-}
-
-// Function to generate mock analysis when OpenAI API is unavailable
-function generateMockAnalysis(code) {
-  const lines = code.split("\n")
-  let feedback = ""
-
-  // Basic analysis based on code content
-  if (code.includes("print(")) {
-    feedback += "1. This code uses the print function to output text to the console.\n\n"
-  } else {
-    feedback += "1. This code appears to be a Python script.\n\n"
-  }
-
-  // Check for potential syntax errors
-  let hasSyntaxError = false
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
-    if (line.includes("print") && !line.includes("(")) {
-      feedback += `2. There might be a syntax error on line ${i + 1}. The print statement requires parentheses in Python 3.\n\n`
-      hasSyntaxError = true
-      break
-    }
-    if (line.includes("if") && !line.includes(":")) {
-      feedback += `2. There might be a syntax error on line ${i + 1}. If statements require a colon at the end.\n\n`
-      hasSyntaxError = true
-      break
-    }
-  }
-
-  if (!hasSyntaxError) {
-    feedback += "2. No obvious syntax errors were detected in the code.\n\n"
-  }
-
-  // Suggestions for improvement
-  if (!code.includes("#")) {
-    feedback += "3. Consider adding comments to explain the purpose of your code for better readability."
-  } else if (code.length > 200) {
-    feedback +=
-      "3. For longer scripts, consider breaking down the code into functions for better organization and reusability."
-  } else {
-    feedback += "3. The code appears to be simple and straightforward. No specific improvements needed."
-  }
-
-  return {
-    feedback,
-    codeInsights: [],
-  }
-}
-
 
       

@@ -29,8 +29,9 @@ export async function POST(req: Request) {
     return NextResponse.json(result)
   } catch (error) {
     console.error("Error executing code:", error)
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to execute code: " + (error.message || "Unknown error") },
+      { error: "Failed to execute code: " + errorMessage },
       { status: 500 },
     )
   }
